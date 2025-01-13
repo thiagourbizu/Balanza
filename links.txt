@@ -8,3 +8,6 @@ https://youtu.be/sxzoAGf1kOo
 para verificar los campos
 
 https://community.home-assistant.io/t/is-there-any-way-to-use-a-hx711-with-12-load-sensors-combined-into-a-single-weight/755270/6
+
+new:
+https://www.youtube.com/watch?v=LIuf2egMioA&t=1s&ab_channel=Indrek

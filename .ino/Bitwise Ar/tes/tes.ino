@@ -1,7 +1,7 @@
-#include <HX711.h>
+    #include <HX711.h>
 
-#define DT 9     // DT de HX711 a pin digital 2
-#define SCK 8    // SCK de HX711 a pin digital 3
+#define DT 16     // DT de HX711 a pin digital 2
+#define SCK 10    // SCK de HX711 a pin digital 3
 
 HX711 celda;     // crea objeto con nombre celda
 float peso =0;
@@ -10,7 +10,7 @@ void setup() {
   Serial.println("Balanza con celda de carga"); // texto descriptivo
 
   celda.begin(DT, SCK);   // inicializa objeto con los pines a utilizar
-  celda.set_scale(-43.97);  // establece el factor de escala obtenido del primer programa
+  celda.set_scale(-43.75);  // establece el factor de escala obtenido del primer programa
   celda.tare();     // realiza la tara o puesta a cero
 }
 
