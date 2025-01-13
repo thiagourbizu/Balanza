@@ -1,27 +1,26 @@
-#include "HX711.h" // incluye libreria HX711
+#include <HX711.h>
 
-#define DT 5  // DT de HX711 a pin digital 5
-#define SCK 6 // SCK de HX711 a pin digital 6
+#define DT 16  // DT de HX711 a pin digital 9
+#define SCK 10 // SCK de HX711 a pin digital 8
 
-HX711 celda; // crea objeto con nombre celda
+HX711 celda; // Crea objeto HX711
 
-float factorCalibracion = 1.0; // Factor inicial, será ajustado durante la calibración
+float factorCalibracion = 1.0; // Factor inicial, ajustable
 
 void setup() {
-  Serial.begin(9600); // inicializa monitor serie a 9600 baudios
-
-  celda.begin(DT, SCK); // inicializa objeto con los pines a utilizar
+  Serial.begin(115200);
+  celda.begin(DT, SCK);
 
   Serial.println("Escribe 'iniciar' en el monitor serie para empezar la calibración.");
 
-  // Espera hasta que el usuario ingrese "iniciar" en el monitor serie
+  // Espera el comando "iniciar"
   while (true) {
     if (Serial.available() > 0) {
-      String comando = Serial.readStringUntil('\n'); // Lee el comando ingresado
-      comando.trim(); // Elimina espacios en blanco y saltos de línea
+      String comando = Serial.readStringUntil('\n');
+      comando.trim();
       if (comando.equalsIgnoreCase("iniciar")) {
         Serial.println("Comando recibido. Iniciando calibración...");
-        break; // Sale del bucle si el comando es válido
+        break;
       } else {
         Serial.println("Comando no reconocido. Escribe 'iniciar' para continuar.");
       }
@@ -29,27 +28,29 @@ void setup() {
   }
 
   // Proceso de calibración
-  Serial.println("En 5 segundos arranca a calibrar."); // texto estático descriptivo
+  Serial.println("En 5 segundos inicia la calibración...");
   delay(5000);
-  celda.set_scale(); // establece el factor de escala por defecto
-  celda.tare();      // realiza la tara o puesta a cero
+
+  celda.set_scale(); // Establece el factor de escala por defecto
+  celda.tare();      // Realiza la tara
+
   Serial.println("Coloca un peso conocido y escribe su valor en gramos:");
 
-  // Espera hasta que el usuario ingrese el peso conocido
+  // Espera el peso conocido
   while (true) {
     if (Serial.available() > 0) {
       String pesoConocidoStr = Serial.readStringUntil('\n');
-      pesoConocidoStr.trim(); // Elimina espacios en blanco
+      pesoConocidoStr.trim();
       float pesoConocido = pesoConocidoStr.toFloat();
 
       if (pesoConocido > 0) {
-        float lectura = celda.get_value(10); // Promedia 10 lecturas
-        factorCalibracion = lectura / pesoConocido; // Calcula el factor de calibración
-        celda.set_scale(factorCalibracion); // Configura el nuevo factor de calibración
+        float lectura = celda.get_value(10); // Realiza una única lectura
+        factorCalibracion = lectura / pesoConocido;
 
         Serial.print("Factor de calibración calculado: ");
         Serial.println(factorCalibracion);
         Serial.println("Calibración completa.");
+        celda.set_scale(factorCalibracion); // Aplica el factor de calibración
         break;
       } else {
         Serial.println("Valor inválido. Escribe un número mayor a 0.");
@@ -59,15 +60,11 @@ void setup() {
 }
 
 void loop() {
-  // Lectura de peso
-  if (celda.is_ready()) {
-    float pesoActual = celda.get_units(10); // Promedia 10 lecturas
-    Serial.print("Peso actual: ");
-    Serial.print(pesoActual);
-    Serial.println(" gramos");
-  } else {
-    Serial.println("Balanza no está lista. Verifica las conexiones.");
-  }
+  // Lectura de peso con el factor de calibración aplicado
+  float peso = celda.get_units(10);
+  Serial.print("Peso: ");
+  Serial.print(peso);
+  Serial.println(" g");
 
-  delay(500); // Lee cada medio segundo
+ 
 }

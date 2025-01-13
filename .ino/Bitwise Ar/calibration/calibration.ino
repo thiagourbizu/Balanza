@@ -1,40 +1,35 @@
 #include "HX711.h" // incluye libreria HX711
 
-#define DT 5  // DT de HX711 a pin digital 5
-#define SCK 6 // SCK de HX711 a pin digital 6
+#define DT1 8  // DT de HX711 a pin digital 5
+#define SCK1 9 // SCK de HX711 a pin digital 6
 
-HX711 celda; // crea objeto con nombre celda
+#define DT2 10  // DT de HX711 a pin digital 5
+#define SCK2 16 // SCK de HX711 a pin digital 6
 
+HX711 celda1; // crea objeto con nombre celda
+HX711 celda2; // crea objeto con nombre celda
 void setup() {
   Serial.begin(9600); // inicializa monitor serie a 9600 baudios
 
-  celda.begin(DT, SCK); // inicializa objeto con los pines a utilizar
+  celda1.begin(DT1, SCK1); // inicializa objeto con los pines a utilizar
+  celda2.begin(DT2, SCK2); // inicializa objeto con los pines a utilizar
 
-  Serial.println("Escribe 'iniciar' en el monitor serie para empezar la calibración.");
 
-  // Espera hasta que el usuario ingrese "iniciar" en el monitor serie
-  while (true) {
-    if (Serial.available() > 0) {
-      String comando = Serial.readStringUntil('\n'); // Lee el comando ingresado
-      comando.trim(); // Elimina espacios en blanco y saltos de línea
-      if (comando.equalsIgnoreCase("iniciar")) {
-        Serial.println("Comando recibido. Iniciando calibración...");
-        break; // Sale del bucle si el comando es válido
-      } else {
-        Serial.println("Comando no reconocido. Escribe 'iniciar' para continuar.");
-      }
-    }
-  }
+  
 
-  // Proceso de calibración
-  celda.set_scale(); // establece el factor de escala por defecto
-  celda.tare();      // realiza la tara o puesta a cero
-  Serial.println("Colocar un peso conocido (10 seg)."); // texto estático descriptivo
-  delay(10000); // demora de 10 segundos para colocar el peso conocido
-  Serial.println(celda.get_units(10)); // obtiene valor promedio de 10 lecturas
-  Serial.println("Hecho. Divide el valor mostrado por el peso colocado."); // texto descriptivo
+  
 }
 
 void loop() {
   // Nada por aquí
+  // Proceso de calibración
+  celda1.set_scale(); // establece el factor de escala por defecto
+  celda1.tare();      // realiza la tara o puesta a cero
+  celda2.set_scale(); // establece el factor de escala por defecto
+  celda2.tare();  
+  Serial.print("Celda 1(barrita): "); // texto descriptivo
+  Serial.println(celda1.get_units(20)); // obtiene valor promedio de 10 lecturas
+  Serial.print("Celda 2:"); // texto descriptivo
+  Serial.println(celda2.get_units(20)); // obtiene valor promedio de 10 lecturas
+  
 }
