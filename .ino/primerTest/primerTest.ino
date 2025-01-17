@@ -18,7 +18,7 @@ void setup() {
     if (Serial.available() > 0) {
       String comando = Serial.readStringUntil('\n');
       comando.trim();
-      if (comando.equalsIgnoreCase("iniciar")) {
+      if (comando.equalsIgnoreCase("i")) {
         Serial.println("Comando recibido. Iniciando calibración...");
         break;
       } else {
@@ -29,13 +29,13 @@ void setup() {
 
   // Proceso de calibración
   Serial.println("En 5 segundos inicia la calibración...");
-  delay(5000);
+  delay(500);
 
   celda.set_scale(); // Establece el factor de escala por defecto
   celda.tare();      // Realiza la tara
 
   Serial.println("Coloca un peso conocido y escribe su valor en gramos:");
-
+ 
   // Espera el peso conocido
   while (true) {
     if (Serial.available() > 0) {

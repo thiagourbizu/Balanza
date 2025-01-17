@@ -1,16 +1,17 @@
-    #include <HX711.h>
+ #include <HX711.h>
 
-#define DT 16     // DT de HX711 a pin digital 2
-#define SCK 10    // SCK de HX711 a pin digital 3
+#define DT 16  // DT de HX711 a pin digital 9
+#define SCK 10 // SCK de HX711 a pin digital 8
 
-HX711 celda;     // crea objeto con nombre celda
+HX711 celda; // Crea objeto HX711
+
 float peso =0;
 void setup() {
-  Serial.begin(9600);   // inicializa monitor serie a 9600 baudios
+  Serial.begin(115200);   // inicializa monitor serie a 9600 baudios
   Serial.println("Balanza con celda de carga"); // texto descriptivo
 
   celda.begin(DT, SCK);   // inicializa objeto con los pines a utilizar
-  celda.set_scale(-43.75);  // establece el factor de escala obtenido del primer programa
+  celda.set_scale(-23.95);  // establece el factor de escala obtenido del primer programa
   celda.tare();     // realiza la tara o puesta a cero
 }
 
@@ -32,6 +33,6 @@ void loop() {
   Serial.println(" gramos");
   
   celda.power_down();  // apaga el módulo HX711
-  delay(500);         // demora de 1 segundo
+  delay(200);         // demora de 1 segundo
   celda.power_up();    // despierta el módulo HX711
 }
