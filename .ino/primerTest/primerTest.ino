@@ -1,17 +1,17 @@
 #include <HX711.h>
 
-#define DT 16  // DT de HX711 a pin digital 9
-#define SCK 10 // SCK de HX711 a pin digital 8
+#define DT 16  // DT9
+#define SCK 10 // SCK8
 
-HX711 celda; // Crea objeto HX711
+HX711 celda;
 
 float factorCalibracion = 1.0; // Factor inicial, ajustable
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   celda.begin(DT, SCK);
 
-  Serial.println("Escribe 'iniciar' en el monitor serie para empezar la calibración.");
+  Serial.println("Escribe 'i' en el monitor serie para empezar la calibración.");
 
   // Espera el comando "iniciar"
   while (true) {
@@ -28,11 +28,11 @@ void setup() {
   }
 
   // Proceso de calibración
-  Serial.println("En 5 segundos inicia la calibración...");
+  Serial.println("En 5 milisegundos inicia la calibración...");
   delay(500);
 
-  celda.set_scale(); // Establece el factor de escala por defecto
-  celda.tare();      // Realiza la tara
+  celda.set_scale(); 
+  celda.tare();      //tare
 
   Serial.println("Coloca un peso conocido y escribe su valor en gramos:");
  
@@ -44,7 +44,7 @@ void setup() {
       float pesoConocido = pesoConocidoStr.toFloat();
 
       if (pesoConocido > 0) {
-        float lectura = celda.get_value(10); // Realiza una única lectura
+        float lectura = celda.get_value(10);
         factorCalibracion = lectura / pesoConocido;
 
         Serial.print("Factor de calibración calculado: ");
