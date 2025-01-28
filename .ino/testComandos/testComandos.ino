@@ -7,9 +7,9 @@
 HX711 balanza;
 
 // Configuraciones iniciales
-float factorCalibracion = -53.75; // Factor de calibración
+float factorCalibracion = -15.32; // Factor de calibración
 String unidad = "kg";             // Unidad por defecto
-int decimales = 2;                // Decimales
+int decimales = 3;                // Decimales
 bool pesoEstable = false;         // Indicador de estabilidad
 
 void setup() {
@@ -66,6 +66,7 @@ void procesarComando(String comando) {
   } else if (comando.startsWith("CALL")) {
     Serial.println("OK.");
     float pesoConocido = comando.substring(5).toFloat();
+    Serial.println(pesoConocido);
     calibrarConPeso(pesoConocido);
   } else {
     Serial.println("Comando no reconocido.");
@@ -98,9 +99,11 @@ void mostrarPeso(float peso) {
 }
 
 void calibrarConPeso(float pesoConocido) {
-  float lectura = balanza.get_value(10)/1000;
-  factorCalibracion = lectura / pesoConocido;
-  balanza.set_scale(factorCalibracion);
-  Serial.print("OK.");
-  Serial.println(factorCalibracion);
+  if (pesoConocido > 0) {
+    float lectura = balanza.get_value(10)/1000;
+    factorCalibracion = lectura / pesoConocido;
+    balanza.set_scale(factorCalibracion);
+    Serial.print("OK.");
+    Serial.println(factorCalibracion);
+  }
 }
