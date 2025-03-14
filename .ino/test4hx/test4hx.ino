@@ -7,7 +7,7 @@
 #define DT4 6
 #define SCK 2  // Mismo SCK para todos
 
-float factor_calibracion = 1.0;
+float factor_calibracion = 107.4;
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
 // Declaración de funciones
@@ -42,17 +42,17 @@ void setup() {
     error = true;
   }
 
-  if (error) { 
+  if (error) {
     while (1);  // Detener ejecución si hay error
   }
 
   Serial.println("HX711 Listos. Tarando...");
-  
+ 
   hx711_1.tare();
   hx711_2.tare();
   hx711_3.tare();
   hx711_4.tare();
-  
+ 
   delay(1000);  // Esperar estabilización
 
   hx711_1.set_scale(factor_calibracion);
@@ -63,27 +63,27 @@ void setup() {
 
 void loop() {
   // Leer cada celda de carga en gramos
-  float peso1 = hx711_1.get_units(10);
-  float peso2 = hx711_2.get_units(10);
-  float peso3 = hx711_3.get_units(10);
-  float peso4 = hx711_4.get_units(10);
+  float peso1 = hx711_1.get_units(3)/1000;
+  float peso2 = hx711_2.get_units(3)/1000;
+  float peso3 = hx711_3.get_units(3)/1000;
+  float peso4 = hx711_4.get_units(3)/1000;
 
   float peso_total = peso1 + peso2 + peso3 + peso4;
 
-  Serial.print("Peso 1: "); Serial.print(peso1, 3); Serial.print(" g | ");
-  Serial.print("Peso 2: "); Serial.print(peso2, 3); Serial.print(" g | ");
-  Serial.print("Peso 3: "); Serial.print(peso3, 3); Serial.print(" g | ");
-  Serial.print("Peso 4: "); Serial.print(peso4, 3); Serial.print(" g | ");
-  Serial.print("Peso Total: "); Serial.print(peso_total, 3); Serial.println(" g");
+  Serial.print("Peso 1: "); Serial.print(peso1, 3); Serial.print(" kg | ");
+  Serial.print("Peso 2: "); Serial.print(peso2, 3); Serial.print(" kg | ");
+  Serial.print("Peso 3: "); Serial.print(peso3, 3); Serial.print(" kg | ");
+  Serial.print("Peso 4: "); Serial.print(peso4, 3); Serial.print(" kg | ");
+  Serial.print("Peso Total: "); Serial.print(peso_total, 3); Serial.println(" kg");
 
   // Revisar si hay comando desde el monitor serie
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
     input.trim();
 
-    if (input.equalsIgnoreCase("Z")) { 
+    if (input.equalsIgnoreCase("Z")) {
       tarearBalanza();
-    } 
+    }
     else if (input.startsWith("CALL ")) {
       float pesoConocido = input.substring(5).toFloat();
       if (pesoConocido > 0) {
@@ -106,10 +106,10 @@ void calibrarBalanza(float peso_referencia) {
   hx711_2.tare();
   hx711_3.tare();
   hx711_4.tare();
-  delay(1000);
+
 
   Serial.println("Coloca el peso de referencia sobre la balanza y presiona Enter cuando esté listo.");
-  
+ 
   while (!Serial.available());  // Esperar confirmación
   Serial.read();
 
