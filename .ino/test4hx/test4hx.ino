@@ -1,11 +1,11 @@
 #include "HX711.h"
 
 // Pines de cada HX711
-#define DT1 3
-#define DT2 4
-#define DT3 5
-#define DT4 6
-#define SCK 2  // Mismo SCK para todos
+#define DT1 13
+#define DT2 8
+#define DT3 7
+#define DT4 5
+#define SCK 6  // Mismo SCK para todos
 
 float factor_calibracion = 107.4;
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
