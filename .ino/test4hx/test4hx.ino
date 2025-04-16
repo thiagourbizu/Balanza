@@ -7,7 +7,7 @@
 #define DT4 5
 #define SCK 6  // Mismo SCK para todos
 
-float factor_calibracion = 107.4;
+float factor_calibracion =1; //107.4;
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
 // Declaración de funciones
@@ -27,19 +27,19 @@ void setup() {
 
   if (!hx711_1.is_ready()) {
     Serial.println("Error: Celda de carga 1 no responde.");
-    error = true;
+    //error = true;
   }
   if (!hx711_2.is_ready()) {
     Serial.println("Error: Celda de carga 2 no responde.");
-    error = true;
+    //error = true;
   }
   if (!hx711_3.is_ready()) {
     Serial.println("Error: Celda de carga 3 no responde.");
-    error = true;
+    //error = true;
   }
   if (!hx711_4.is_ready()) {
     Serial.println("Error: Celda de carga 4 no responde.");
-    error = true;
+    //error = true;
   }
 
   if (error) {

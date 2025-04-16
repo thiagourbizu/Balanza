@@ -1,13 +1,13 @@
 #include "HX711.h"
 
 // Pines del HX711
-#define DT 3
-#define SCK 2
+#define DT 7
+#define SCK 6
 
 HX711 balanza; 
 
 // Configuraciones iniciales
-float factorCalibracion = 43.24; // Factor de calibración
+float factorCalibracion = 1.0; // Factor de calibración
 String unidad = "kg";             // Unidad por defecto
 int decimales = 3;                // Decimales
 bool pesoEstable = false;         // Indicador de estabilidad
@@ -101,7 +101,8 @@ void mostrarPeso(float peso) {
 
 void calibrarConPeso(float pesoConocido) {
   if (pesoConocido > 0) {
-    float lectura = balanza.get_value(200);
+    balanza.tare();
+    float lectura = balanza.get_units(10);
     factorCalibracion = lectura / pesoConocido;
     balanza.set_scale(factorCalibracion);
     Serial.print("OK.");

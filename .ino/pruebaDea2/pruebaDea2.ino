@@ -1,9 +1,12 @@
 #include <HX711.h>
 
-#define DT 3  // DT de HX711 a pin digital 9
-#define SCK 2 // SCK de HX711 a pin digital 
 
-#define DT2 4  // DT de HX711 a pin digital 9
+// Pines de cada HX711
+#define DT 13
+#define DT2 8
+#define DT3 7
+#define DT4 5
+#define SCK 6  // Mismo SCK para todos
 
 HX711 celda; // Crea objeto HX711
 HX711 celda2; // Crea objeto HX711
@@ -12,7 +15,7 @@ float factorCalibracion = 1.0; // Factor inicial, ajustable
 
 void setup() {
   Serial.begin(9600);
-  celda.begin(DT, SCK);
+  celda.begin(DT3, SCK);
   celda2.begin(DT2, SCK);
 
   Serial.println("Escribe 'iniciar' en el monitor serie para empezar la calibración.");
