@@ -10,10 +10,10 @@
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
 // Factores de calibración individuales
-float factorCalibracion1 = 1.0;
-float factorCalibracion2 = 1.0;
-float factorCalibracion3 = 1.0;
-float factorCalibracion4 = 1.0;
+float factorCalibracion1 = 124.53;
+float factorCalibracion2 = 126.52;
+float factorCalibracion3 = 124.81;
+float factorCalibracion4 = 125.72;
 
 String unidad = "kg";
 int decimales = 3;
@@ -144,6 +144,9 @@ void calibrarCelda(int celda, float pesoConocido) {
 
   switch (celda) {
     case 1:
+      hx711_1.tare();
+      Serial.println("Tare Realizado, colocar peso");
+      delay(5000);
       lectura = hx711_1.get_value(10);
       nuevoFactor = lectura / pesoConocido;
       hx711_1.set_scale(nuevoFactor);
@@ -151,6 +154,9 @@ void calibrarCelda(int celda, float pesoConocido) {
       break;
 
     case 2:
+      hx711_2.tare();
+      Serial.println("Tare Realizado, colocar peso");
+      delay(5000);
       lectura = hx711_2.get_value(10);
       nuevoFactor = lectura / pesoConocido;
       hx711_2.set_scale(nuevoFactor);
@@ -158,6 +164,9 @@ void calibrarCelda(int celda, float pesoConocido) {
       break;
 
     case 3:
+      hx711_3.tare();
+      Serial.println("Tare Realizado, colocar peso");
+      delay(5000);
       lectura = hx711_3.get_value(10);
       nuevoFactor = lectura / pesoConocido;
       hx711_3.set_scale(nuevoFactor);
@@ -165,6 +174,9 @@ void calibrarCelda(int celda, float pesoConocido) {
       break;
 
     case 4:
+      hx711_4.tare();
+      Serial.println("Tare Realizado, colocar peso");
+      delay(5000);
       lectura = hx711_4.get_value(10);
       nuevoFactor = lectura / pesoConocido;
       hx711_4.set_scale(nuevoFactor);
