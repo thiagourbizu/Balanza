@@ -1,11 +1,11 @@
 #include "HX711.h"
 
 // Pines de cada HX711
-#define DT1 13
-#define DT2 8
+#define DT1 0
+#define DT2 17
 #define DT3 7
 #define DT4 5
-#define SCK 6
+#define SCK 16
 
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
@@ -20,7 +20,8 @@ int decimales = 3;
 bool pesoEstable = false;
 
 void setup() {
-  Serial.begin(9600);
+  delay(3000);
+  Serial.begin(115200);
 
   hx711_1.begin(DT1, SCK);
   hx711_2.begin(DT2, SCK);
@@ -147,7 +148,7 @@ void calibrarCelda(int celda, float pesoConocido) {
       hx711_1.tare();
       Serial.println("Tare Realizado, colocar peso");
       delay(5000);
-      lectura = hx711_1.get_value(10);
+      lectura = hx711_1.get_value(50);
       nuevoFactor = lectura / pesoConocido;
       hx711_1.set_scale(nuevoFactor);
       factorCalibracion1 = nuevoFactor;
@@ -157,7 +158,7 @@ void calibrarCelda(int celda, float pesoConocido) {
       hx711_2.tare();
       Serial.println("Tare Realizado, colocar peso");
       delay(5000);
-      lectura = hx711_2.get_value(10);
+      lectura = hx711_2.get_value(50);
       nuevoFactor = lectura / pesoConocido;
       hx711_2.set_scale(nuevoFactor);
       factorCalibracion2 = nuevoFactor;
@@ -167,7 +168,7 @@ void calibrarCelda(int celda, float pesoConocido) {
       hx711_3.tare();
       Serial.println("Tare Realizado, colocar peso");
       delay(5000);
-      lectura = hx711_3.get_value(10);
+      lectura = hx711_3.get_value(50);
       nuevoFactor = lectura / pesoConocido;
       hx711_3.set_scale(nuevoFactor);
       factorCalibracion3 = nuevoFactor;
@@ -177,7 +178,7 @@ void calibrarCelda(int celda, float pesoConocido) {
       hx711_4.tare();
       Serial.println("Tare Realizado, colocar peso");
       delay(5000);
-      lectura = hx711_4.get_value(10);
+      lectura = hx711_4.get_value(50);
       nuevoFactor = lectura / pesoConocido;
       hx711_4.set_scale(nuevoFactor);
       factorCalibracion4 = nuevoFactor;
