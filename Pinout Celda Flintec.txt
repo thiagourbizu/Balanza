@@ -1,0 +1,10 @@
+E+ == AZUL RJ45
+E- == AZUL BLANCO RJ45
+A- == VERDE RJ45
+A+ == VERDE BLANCO RJ45
+
+
+verde blanco 1
+verde 2
+azul 4
+azul blanco 5

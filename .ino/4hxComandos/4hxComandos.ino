@@ -1,19 +1,21 @@
 #include "HX711.h"
 
 // Pines de cada HX711
-#define DT1 0
-#define DT2 17
-#define DT3 7
-#define DT4 5
-#define SCK 16
+#define DT1 16
+#define DT2 19
+#define DT3 20
+#define DT4 22
+#define SCK 26
+
+#define iterations 3
 
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
 // Factores de calibración individuales
-float factorCalibracion1 = 124.53;
-float factorCalibracion2 = 126.52;
-float factorCalibracion3 = 124.81;
-float factorCalibracion4 = 125.72;
+int factorCalibracion1 = 124.53;
+int factorCalibracion2 = 126.52;
+int factorCalibracion3 = 124.81;
+int factorCalibracion4 = 125.72;
 
 String unidad = "kg";
 int decimales = 3;
@@ -59,10 +61,10 @@ void loop() {
 }
 
 float leerPesoTotal() {
-  float p1 = hx711_1.get_units(3);
-  float p2 = hx711_2.get_units(3);
-  float p3 = hx711_3.get_units(3);
-  float p4 = hx711_4.get_units(3);
+  float p1 = hx711_1.get_units(iterations);
+  float p2 = hx711_2.get_units(iterations);
+  float p3 = hx711_3.get_units(iterations);
+  float p4 = hx711_4.get_units(iterations);
 
   return (p1 + p2 + p3 + p4) / 1000.0;  // Kg
 }
