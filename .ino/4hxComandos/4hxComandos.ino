@@ -11,10 +11,9 @@
 
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
-// Factores de calibración individuales
 int factorCalibracion1 = 124.53;
-int factorCalibracion2 = 126.52;
-int factorCalibracion3 = 124.81;
+int factorCalibracion2 = 124.81;
+int factorCalibracion3 = 126.52;
 int factorCalibracion4 = 125.72;
 
 String unidad = "kg";
@@ -22,8 +21,8 @@ int decimales = 3;
 bool pesoEstable = false;
 
 void setup() {
-  delay(3000);
-  Serial.begin(115200);
+  //delay(3000);
+  Serial.begin(9600);
 
   hx711_1.begin(DT1, SCK);
   hx711_2.begin(DT2, SCK);
@@ -42,10 +41,10 @@ void setup() {
   hx711_3.set_scale(factorCalibracion3);
   hx711_4.set_scale(factorCalibracion4);
 
-  hx711_1.tare();
-  hx711_2.tare();
-  hx711_3.tare();
-  hx711_4.tare();
+  //hx711_1.tare();
+  //hx711_2.tare();
+  //hx711_3.tare();
+  //hx711_4.tare();
 }
 
 void loop() {
@@ -75,7 +74,7 @@ void procesarComando(String comando) {
     hx711_2.tare();
     hx711_3.tare();
     hx711_4.tare();
-    Serial.println("Tare.");
+    //Serial.println("Tare.");
   } else if (comando.startsWith("SET DECI")) {
     decimales = comando.substring(9).toInt();
     if (decimales >= 1 && decimales <= 3) {
@@ -115,7 +114,7 @@ void procesarComando(String comando) {
       Serial.println("Formato incorrecto. Usa: CALL X Y");
     }
   } else {
-    Serial.println("Comando no reconocido.");
+    //Serial.println("Comando no reconocido.");
   }
 }
 
@@ -129,14 +128,14 @@ bool verificarEstabilidad(float peso) {
 void mostrarPeso(float peso) {
   if (peso > 280.0) {
     Serial.println("---OL---");
-  } else {
-    String estado = pesoEstable ? "ST NW +" : "UT NW +";
-    float pesoConvertido = (unidad == "lb") ? peso * 2.2046 : peso;
-    Serial.print(estado);
-    Serial.print(String(pesoConvertido, decimales));
-    Serial.print(" ");
-    Serial.println(unidad);
+    return;
   }
+
+  String estado = pesoEstable ? "ST NW " : "UT NW ";
+  String signo = (peso >= 0) ? "+" : "-";
+  String value = String(fabs((unidad == "lb") ? peso * 2.2046 : peso), decimales);
+
+  Serial.println(estado + signo + value + unidad);
 }
 
 void calibrarCelda(int celda, float pesoConocido) {
