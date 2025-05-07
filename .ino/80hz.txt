@@ -1,6 +1,0 @@
-https://forum.arduino.cc/t/how-to-get-80hz-with-hx711/435703/2
-# important
-
-https://forum.arduino.cc/t/hx711-noise-free-resolution-tests/351959
-
-https://forum.arduino.cc/t/hx711-soldering-for-80-hz/630699
