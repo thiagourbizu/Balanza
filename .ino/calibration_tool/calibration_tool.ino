@@ -5,8 +5,8 @@
 
 HX711 balanza;
 
-float factor = 0;  // Valor aproximado, lo ajustaremos
-const int numLecturas = 10000;  // Número de lecturas para promediar
+float factor;  // Valor aproximado, lo ajustaremos
+const int numLecturas = 25000;  // Número de lecturas para promediar
 
 void setup() {
   Serial.begin(9600);
@@ -31,7 +31,7 @@ void loop() {
     long lecturaTotal = 0;
     for (int i = 0; i < numLecturas; i++) {
       lecturaTotal += balanza.get_units(5);
-      delay(10);  // Esperar un momento entre lecturas
+      delay(1);
     }
     long lecturaPromedio = lecturaTotal / numLecturas;
     Serial.print("Lectura cruda promedio: ");
@@ -44,6 +44,6 @@ void loop() {
     // Calcular factor de calibración más preciso
     factor = lecturaPromedio / pesoConocido;
     Serial.print("Factor de calibración calculado: ");
-    Serial.println(factor, 2);
+    Serial.println(factor, 5);
   }
 }

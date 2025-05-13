@@ -1,20 +1,27 @@
 #include "HX711.h"
 
 // Pines de cada HX711
-#define DT1 16
-#define DT2 19
-#define DT3 20
-#define DT4 22
-#define SCK 26
+#define DT1 7
+#define DT2 13
+#define DT3 8
+#define DT4 5
+#define SCK 6
 
-#define iterations 3
+#define iterations 10
 
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
-int factorCalibracion1 = 124.53;
-int factorCalibracion2 = 124.81;
-int factorCalibracion3 = 126.52;
+int factorCalibracion1 = 126.61834;
+int factorCalibracion2 = 125.04365;
+int factorCalibracion3 = 124.1344;
 int factorCalibracion4 = 125.72;
+
+unsigned long tiempoAnterior = 0;
+
+bool active1 = false;
+bool active2 = true;
+bool active3 = false;
+bool active4 = false;
 
 String unidad = "kg";
 int decimales = 3;
@@ -41,10 +48,10 @@ void setup() {
   hx711_3.set_scale(factorCalibracion3);
   hx711_4.set_scale(factorCalibracion4);
 
-  //hx711_1.tare();
-  //hx711_2.tare();
-  //hx711_3.tare();
-  //hx711_4.tare();
+  hx711_1.tare();
+  hx711_2.tare();
+  hx711_3.tare();
+  hx711_4.tare();
 }
 
 void loop() {
@@ -55,68 +62,117 @@ void loop() {
   }
 
   float pesoTotal = leerPesoTotal();
-  pesoEstable = verificarEstabilidad(pesoTotal);
   mostrarPeso(pesoTotal);
 }
 
 float leerPesoTotal() {
-  float p1 = hx711_1.get_units(iterations);
-  float p2 = hx711_2.get_units(iterations);
-  float p3 = hx711_3.get_units(iterations);
-  float p4 = hx711_4.get_units(iterations);
+  float peso = 0;
 
-  return (p1 + p2 + p3 + p4) / 1000.0;  // Kg
+  if (active1) peso += hx711_1.get_units(iterations);
+  if (active2) peso += hx711_2.get_units(iterations);
+  if (active3) peso += hx711_3.get_units(iterations);
+  if (active4) peso += hx711_4.get_units(iterations);
+
+  return peso / 1000.0;  // Kg
 }
-
 void procesarComando(String comando) {
-  if (comando.equalsIgnoreCase("Z")) {
+  comando.trim();
+  comando.toUpperCase();
+
+  if (comando == "Z") {
     hx711_1.tare();
     hx711_2.tare();
     hx711_3.tare();
     hx711_4.tare();
-    //Serial.println("Tare.");
-  } else if (comando.startsWith("SET DECI")) {
-    decimales = comando.substring(9).toInt();
-    if (decimales >= 1 && decimales <= 3) {
-      Serial.print("OK");
+    Serial.println("OK TARE");
+    return;
+  }
+
+    if (comando == "1") {
+    active1 = !active1;
+    Serial.print("CELDA 1 ");
+    Serial.println(active1 ? "ACTIVADA" : "DESACTIVADA");
+    return;
+  }
+
+  if (comando == "2") {
+    active2 = !active2;
+    Serial.print("CELDA 2 ");
+    Serial.println(active2 ? "ACTIVADA" : "DESACTIVADA");
+    return;
+  }
+
+  if (comando == "3") {
+    active3 = !active3;
+    Serial.print("CELDA 3 ");
+    Serial.println(active3 ? "ACTIVADA" : "DESACTIVADA");
+    return;
+  }
+
+  if (comando == "4") {
+    active4 = !active4;
+    Serial.print("CELDA 4 ");
+    Serial.println(active4 ? "ACTIVADA" : "DESACTIVADA");
+    return;
+  }
+
+  if (comando.startsWith("SET DECI ")) {
+    String valor = comando.substring(9);
+    int nuevosDecimales = valor.toInt();
+    if (nuevosDecimales >= 1 && nuevosDecimales <= 3) {
+      decimales = nuevosDecimales;
+      Serial.print("OK ");
       Serial.println(decimales);
     } else {
-      Serial.println("ERROR.");
+      Serial.println("ERROR DECIMALES");
     }
-  } else if (comando.startsWith("SETWEIGHTUNIT")) {
-    String nuevaUnidad = comando.substring(14);
-    if (nuevaUnidad.equals("0")) {
+    return;
+  }
+
+  if (comando.startsWith("SETWEIGHTUNIT ")) {
+    String valor = comando.substring(15);
+    if (valor == "0") {
       unidad = "kg";
-      Serial.println("OK");
-    } else if (nuevaUnidad.equals("4")) {
+      Serial.println("OK UNIDAD KG");
+    } else if (valor == "4") {
       unidad = "lb";
-      Serial.println("OK");
+      Serial.println("OK UNIDAD LB");
     } else {
-      Serial.println("ERROR.");
+      Serial.println("ERROR UNIDAD");
     }
-  } else if (comando.startsWith("CALL")) {
-    // Esperado: CALL X Y
-    int indexEspacio1 = comando.indexOf(' ');
+    return;
+  }
+
+  if (comando.startsWith("CALL ")) {
+    // CALL X Y
+    int indexEspacio1 = comando.indexOf(' ', 5);
     int indexEspacio2 = comando.indexOf(' ', indexEspacio1 + 1);
 
-    if (indexEspacio1 != -1 && indexEspacio2 != -1) {
-      int celda = comando.substring(indexEspacio1 + 1, indexEspacio2).toInt();
-      float peso = comando.substring(indexEspacio2 + 1).toFloat();
+    if (indexEspacio1 > 0 && indexEspacio2 == -1) {
+      // Extraer celda y peso
+      int celda = comando.substring(5, indexEspacio1).toInt();
+      float peso = comando.substring(indexEspacio1 + 1).toFloat();
 
       if (celda >= 1 && celda <= 4 && peso > 0) {
         calibrarCelda(celda, peso);
-        Serial.print("Celda "); Serial.print(celda);
-        Serial.print(" calibrada con "); Serial.print(peso); Serial.println(" kg.");
+        Serial.print("OK CELDA ");
+        Serial.print(celda);
+        Serial.print(" = ");
+        Serial.print(peso);
+        Serial.println(" KG");
       } else {
-        Serial.println("ERROR en parámetros.");
+        Serial.println("ERROR PARAMETROS CALL");
       }
     } else {
-      Serial.println("Formato incorrecto. Usa: CALL X Y");
+      Serial.println("ERROR FORMATO CALL. USA: CALL X Y");
     }
-  } else {
-    //Serial.println("Comando no reconocido.");
+    return;
   }
+
+  // Comando no reconocido
+  Serial.println("ERROR COMANDO DESCONOCIDO");
 }
+
 
 bool verificarEstabilidad(float peso) {
   static float pesoAnterior = 0;
@@ -126,18 +182,27 @@ bool verificarEstabilidad(float peso) {
 }
 
 void mostrarPeso(float peso) {
+  unsigned long tiempoActual = millis();
+  unsigned long tiempoTranscurrido = tiempoActual - tiempoAnterior;
+  tiempoAnterior = tiempoActual;
+
   if (peso > 280.0) {
     Serial.println("---OL---");
     return;
   }
 
+  // Aplicar zona muerta de ±2.5g
+  if (fabs(peso) < 0.0025) {
+    peso = 0;
+  }
+
   String estado = pesoEstable ? "ST NW " : "UT NW ";
   String signo = (peso >= 0) ? "+" : "-";
   String value = String(fabs((unidad == "lb") ? peso * 2.2046 : peso), decimales);
+  String tiempoMs = String(tiempoTranscurrido) + "ms";
 
-  Serial.println(estado + signo + value + unidad);
+  Serial.println(estado + signo + value + unidad + " " + tiempoMs);
 }
-
 void calibrarCelda(int celda, float pesoConocido) {
   if (pesoConocido <= 0) return;
 

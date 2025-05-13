@@ -1,13 +1,13 @@
 #include "HX711.h"
 
 // Pines del HX711
-#define DT 7
+#define DT 13
 #define SCK 6
 
 HX711 balanza; 
 
 // Configuraciones iniciales
-float factorCalibracion = 127.278 ; // Factor de calibración
+float factorCalibracion = 125.04365; // Factor de calibración
 String unidad = "kg";             // Unidad por defecto
 int decimales = 3;                // Decimales
 bool pesoEstable = false;         // Indicador de estabilidad

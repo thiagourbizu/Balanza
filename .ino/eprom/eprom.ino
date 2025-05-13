@@ -23,7 +23,7 @@ void setup() {
   Wire.begin();
 
   float rawFloat = leerFloatDesdeEEPROM(0x12);
-  float calibracion = rawFloat / 3.034551413001956;
+  float calibracion = rawFloat / 3.0355;//3.034551413001956;
   Serial.print("Factor de calibracion (raw float): ");
   Serial.println(rawFloat, 3);
   Serial.print("Factor de calibracion: ");
@@ -35,9 +35,17 @@ void setup() {
 
 /*
  con este factor 3.034551413001956
- A=126.658 (384.350)
- B=125.083 (379.570)
- C=124.173 (376.810)
+ A=126.658 (384,350)
+ 127,86765
+ 126,61834953055509800691813539779‬
+ 
+ B=125.083 (379,570)
+ 125,04365014000988305056827540768‬
+ 124,35295
+3,0523602375335687653569939434489‬
+
+ C=124.173 (376,810)
+ 124,1344094877285455443913688025
 
 
  */
