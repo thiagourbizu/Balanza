@@ -64,16 +64,6 @@
         }
       ],
       "drc_exclusions": [
-        "hole_clearance|100170000|45107800|0efddfb1-2d90-413b-a47d-4e76e3abdd38|1a0d70b1-e025-46da-a59e-498afb9830cc",
-        "hole_clearance|100170000|45107800|0efddfb1-2d90-413b-a47d-4e76e3abdd38|ed23e889-f66d-4eb5-b2a2-6159e7f129ba",
-        "hole_clearance|105570000|45107800|5ce266b4-1b12-40fd-b2a2-7f5a2dbae650|7b08c614-9310-4fca-bf80-8414175bffc6",
-        "hole_clearance|105570000|45107800|5ce266b4-1b12-40fd-b2a2-7f5a2dbae650|98d596b5-3fc9-4ae7-a4a4-4d10ddfdefff",
-        "hole_clearance|105770000|45107800|5ce266b4-1b12-40fd-b2a2-7f5a2dbae650|523bfe95-c9a6-4bd0-a24d-20539a46366d",
-        "hole_clearance|105770000|45107800|5ce266b4-1b12-40fd-b2a2-7f5a2dbae650|5de1d9e2-0087-48ab-8dfd-3d0d2e37089a",
-        "hole_clearance|99970000|45107800|0efddfb1-2d90-413b-a47d-4e76e3abdd38|348a84c2-cb15-4727-af87-560037c163f3",
-        "hole_clearance|99970000|45107800|0efddfb1-2d90-413b-a47d-4e76e3abdd38|e03b2e94-0f87-4998-b7cc-058d7a138aa6",
-        "lib_footprint_issues|103166539|80770710|bea37e51-419b-4ecc-9227-cb1106cc1a72|00000000-0000-0000-0000-000000000000",
-        "lib_footprint_mismatch|102870000|42302800|b73faa4f-f3b2-45ec-ac24-32b0fcfe5923|00000000-0000-0000-0000-000000000000",
         "lib_footprint_mismatch|96494600|43716300|f573c1fb-085b-49ae-b0de-86b1fb1b2e59|00000000-0000-0000-0000-000000000000",
         "lib_footprint_mismatch|96980100|47802800|a1060c86-f08c-45b6-a14b-f4d712ac821b|00000000-0000-0000-0000-000000000000",
         "lib_footprint_mismatch|97222600|59105800|00737e19-b443-4ed5-974f-fbc436c31055|00000000-0000-0000-0000-000000000000",
@@ -156,7 +146,7 @@
         "min_via_diameter": 0.6,
         "solder_mask_clearance": 0.0,
         "solder_mask_min_width": 0.0,
-        "solder_mask_to_copper_clearance": 0.0,
+        "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -208,6 +198,7 @@
         0.2,
         0.25,
         0.5,
+        1.0,
         3.0
       ],
       "tuning_pattern_settings": {
