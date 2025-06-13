@@ -6016,6 +6016,80 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x04_Pin")
+		(at 85.09 26.67 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cbb1d06e-3ad0-425a-87a7-46c1927bb553")
+		(property "Reference" "hx711_9"
+			(at 83.82 21.59 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Conn_01x04_Pin"
+			(at 83.82 24.13 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical"
+			(at 85.09 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 85.09 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x04, script generated"
+			(at 85.09 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "4"
+			(uuid "c4c230e6-9c12-4c54-88ad-1742b91171e2")
+		)
+		(pin "2"
+			(uuid "3d765fd3-5019-43fd-ae12-33e8b3c1920f")
+		)
+		(pin "3"
+			(uuid "db3f710f-c8d3-42a6-9381-f32ef907cacf")
+		)
+		(pin "1"
+			(uuid "bc14b862-9b7c-4cfd-872a-bccf85a12f84")
+		)
+		(instances
+			(project "Pico_4hx"
+				(path "/17237415-8105-467e-8f47-8ef5d09e05db"
+					(reference "hx711_9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
 		(at 229.87 63.5 270)
 		(unit 1)
 		(exclude_from_sim no)
