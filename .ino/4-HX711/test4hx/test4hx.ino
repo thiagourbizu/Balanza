@@ -1,136 +1,85 @@
 #include "HX711.h"
 
-// Pines de cada HX711
-#define DT1 13
-#define DT2 8
-#define DT3 7
-#define DT4 5
-#define SCK 6  // Mismo SCK para todos
+// Pines
+#define DT1 16
+#define DT2 19
+#define DT3 20
+#define SCK 26
 
-float factor_calibracion =1; //107.4;
-HX711 hx711_1, hx711_2, hx711_3, hx711_4;
+#define iterations 15
+HX711 hx1, hx2, hx3;
 
-// Declaración de funciones
-void tarearBalanza();
-void calibrarBalanza(float peso_referencia);
+float peso1 = 0, peso2 = 0, peso3 = 0;
+float peso1_suav = 0, peso2_suav = 0, peso3_suav = 0;
+
+const float alpha = 0.95;  // filtro exponencial para suavizado (más peso a historial)
+const float umbral = 3.0;  // en gramos = 0.003 kg
+
+unsigned long lastMillis = 0;
+float ultimoTotal = 0.0;
+
+// Factores de calibración actualizados
+float factor[3] = {126.658, 124.173, 125.083};
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  delay(3000);
 
-  hx711_1.begin(DT1, SCK);
-  hx711_2.begin(DT2, SCK);
-  hx711_3.begin(DT3, SCK);
-  hx711_4.begin(DT4, SCK);
+  hx1.begin(DT1, SCK); hx1.set_scale(factor[0]);
+  hx2.begin(DT2, SCK); hx2.set_scale(factor[1]);
+  hx3.begin(DT3, SCK); hx3.set_scale(factor[2]);
 
-  Serial.println("Verificando sensores...");
-  bool error = false;
+  tareGeneral();
+  lastMillis = millis();
 
-  if (!hx711_1.is_ready()) {
-    Serial.println("Error: Celda de carga 1 no responde.");
-    //error = true;
-  }
-  if (!hx711_2.is_ready()) {
-    Serial.println("Error: Celda de carga 2 no responde.");
-    //error = true;
-  }
-  if (!hx711_3.is_ready()) {
-    Serial.println("Error: Celda de carga 3 no responde.");
-    //error = true;
-  }
-  if (!hx711_4.is_ready()) {
-    Serial.println("Error: Celda de carga 4 no responde.");
-    //error = true;
-  }
-
-  if (error) {
-    while (1);  // Detener ejecución si hay error
-  }
-
-  Serial.println("HX711 Listos. Tarando...");
- 
-  hx711_1.tare();
-  hx711_2.tare();
-  hx711_3.tare();
-  hx711_4.tare();
- 
-  delay(1000);  // Esperar estabilización
-
-  hx711_1.set_scale(factor_calibracion);
-  hx711_2.set_scale(factor_calibracion);
-  hx711_3.set_scale(factor_calibracion);
-  hx711_4.set_scale(factor_calibracion);
+  // Inicializar suavizado con primeras lecturas
+  peso1_suav = hx1.get_units(iterations);
+  peso2_suav = hx2.get_units(iterations);
+  peso3_suav = hx3.get_units(iterations);
 }
 
 void loop() {
-  // Leer cada celda de carga en gramos
-  float peso1 = hx711_1.get_units(3)/1000;
-  float peso2 = hx711_2.get_units(3)/1000;
-  float peso3 = hx711_3.get_units(3)/1000;
-  float peso4 = hx711_4.get_units(3)/1000;
+  peso1 = hx1.get_units(iterations);
+  peso2 = hx2.get_units(iterations);
+  peso3 = hx3.get_units(iterations);
 
-  float peso_total = peso1 + peso2 + peso3 + peso4;
+  peso1_suav = peso1_suav * alpha + peso1 * (1 - alpha);
+  peso2_suav = peso2_suav * alpha + peso2 * (1 - alpha);
+  peso3_suav = peso3_suav * alpha + peso3 * (1 - alpha);
 
-  Serial.print("Peso 1: "); Serial.print(peso1, 3); Serial.print(" kg | ");
-  Serial.print("Peso 2: "); Serial.print(peso2, 3); Serial.print(" kg | ");
-  Serial.print("Peso 3: "); Serial.print(peso3, 3); Serial.print(" kg | ");
-  Serial.print("Peso 4: "); Serial.print(peso4, 3); Serial.print(" kg | ");
-  Serial.print("Peso Total: "); Serial.print(peso_total, 3); Serial.println(" kg");
+  // suma en gramos, porque get_units da peso en "unidades", 
+  // suponiendo factor calibrado para gramos (si no, ajustá aquí)
+  float total = peso1_suav + peso2_suav + peso3_suav;
 
-  // Revisar si hay comando desde el monitor serie
+  // Aplicar umbral: si total dentro ±3 gramos, poner a 0
+  if (abs(total) < umbral) {
+    total = 0.0;
+  }
+
+  // Convertir a kg para impresión
+  float totalKg = total / 1000.0;
+
+  unsigned long now = millis();
+  unsigned long delta = now - lastMillis;
+  lastMillis = now;
+
+  Serial.print("Peso total: ");
+  Serial.print(totalKg, 3);
+  Serial.print(" kg (Δt = ");
+  Serial.print(delta);
+  Serial.println(" ms)");
+
   if (Serial.available()) {
-    String input = Serial.readStringUntil('\n');
-    input.trim();
-
-    if (input.equalsIgnoreCase("Z")) {
-      tarearBalanza();
-    }
-    else if (input.startsWith("CALL ")) {
-      float pesoConocido = input.substring(5).toFloat();
-      if (pesoConocido > 0) {
-        calibrarBalanza(pesoConocido);
-      } else {
-        Serial.println("Error: Formato incorrecto. Use 'CALL <peso>'");
-      }
-    } else {
-      Serial.println("Error: Comando no válido. Use 'CALL <peso>' o 'Z'");
+    char cmd = Serial.read();
+    if (cmd == 'z' || cmd == 'Z') {
+      tareGeneral();
     }
   }
 }
 
-void calibrarBalanza(float peso_referencia) {
-  Serial.println("Calibrando... No toques la balanza.");
-  Serial.print("Peso de referencia: "); Serial.print(peso_referencia); Serial.println(" g");
-
-  // Realizar tare en todas las celdas
-  hx711_1.tare();
-  hx711_2.tare();
-  hx711_3.tare();
-  hx711_4.tare();
-
-
-  Serial.println("Coloca el peso de referencia sobre la balanza y presiona Enter cuando esté listo.");
- 
-  while (!Serial.available());  // Esperar confirmación
-  Serial.read();
-
-  float lectura = hx711_1.get_units(10) + hx711_2.get_units(10) + hx711_3.get_units(10) + hx711_4.get_units(10);
-  float nuevo_factor = lectura / peso_referencia;
-
-  hx711_1.set_scale(nuevo_factor);
-  hx711_2.set_scale(nuevo_factor);
-  hx711_3.set_scale(nuevo_factor);
-  hx711_4.set_scale(nuevo_factor);
-
-  Serial.print("Nuevo factor de calibración: ");
-  Serial.println(nuevo_factor, 5);
-  Serial.println("Calibración completada.");
-}
-
-void tarearBalanza() {
-  Serial.println("Realizando Tare... Espere.");
-  hx711_1.tare();
-  hx711_2.tare();
-  hx711_3.tare();
-  hx711_4.tare();
-  Serial.println("Tare completado.");
+void tareGeneral() {
+  hx1.tare();
+  hx2.tare();
+  hx3.tare();
+  Serial.println("Tare general realizado.");
 }

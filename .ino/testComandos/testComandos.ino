@@ -1,8 +1,8 @@
 #include "HX711.h"
 
 // Pines del HX711
-#define DT 10
-#define SCK 9
+#define DT 16
+#define SCK 10
 
 HX711 balanza; 
 

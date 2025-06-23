@@ -1,48 +1,61 @@
 #include "HX711.h"
+#include "pico/multicore.h"
 
-// Pines de cada HX711
-#define DT1 7
-#define DT2 13
-#define DT3 8
-#define DT4 5
-#define SCK 6
+// Pines
+#define DT1 16
+#define SCK1 10
+
+#define DT2 19
+#define SCK2 17
+
+#define DT3 20
+#define SCK3 18
+
+#define DT4 22
+#define SCK4 26
 
 #define iterations 10
 
 HX711 hx711_1, hx711_2, hx711_3, hx711_4;
 
-int factorCalibracion1 = 126.61834;
-int factorCalibracion2 = 125.04365;
-int factorCalibracion3 = 124.1344;
-int factorCalibracion4 = 125.72;
+float lecturaCore0 = 0;
+volatile float lecturaCore1 = 0;
+
+int factorCalibracion1 = 125.083;
+int factorCalibracion2 = 124.173;
+int factorCalibracion3 = 126.658;
+int factorCalibracion4 = 125;
 
 unsigned long tiempoAnterior = 0;
 
 bool active1 = false;
 bool active2 = true;
-bool active3 = false;
-bool active4 = false;
+bool active3 = true;
+bool active4 = true;
 
 String unidad = "kg";
 int decimales = 3;
 bool pesoEstable = false;
 
-void setup() {
-  //delay(3000);
-  Serial.begin(9600);
+// ================= CORE 1 =================
+void core1Loop() {
+  while (true) {
+    float peso = 0;
+    if (active3) peso += hx711_3.get_units(iterations);
+    if (active4) peso += hx711_4.get_units(iterations);
+    lecturaCore1 = peso / 1000.0; // Convertir a kg
+  }
+}
 
-  hx711_1.begin(DT1, SCK);
-  hx711_2.begin(DT2, SCK);
-  hx711_3.begin(DT3, SCK);
-  hx711_4.begin(DT4, SCK);
-  
-  /*
-  if (!hx711_1.is_ready()) Serial.println("Error: Celda de carga 1 no responde.");
-  if (!hx711_2.is_ready()) Serial.println("Error: Celda de carga 2 no responde.");
-  if (!hx711_3.is_ready()) Serial.println("Error: Celda de carga 3 no responde.");
-  if (!hx711_4.is_ready()) Serial.println("Error: Celda de carga 4 no responde.");
-  */
-  
+// ================= SETUP =================
+void setup() {
+  Serial.begin(115200);
+
+  hx711_1.begin(DT1, SCK1);
+  hx711_2.begin(DT2, SCK2);
+  hx711_3.begin(DT3, SCK3);
+  hx711_4.begin(DT4, SCK4);
+
   hx711_1.set_scale(factorCalibracion1);
   hx711_2.set_scale(factorCalibracion2);
   hx711_3.set_scale(factorCalibracion3);
@@ -52,8 +65,11 @@ void setup() {
   hx711_2.tare();
   hx711_3.tare();
   hx711_4.tare();
+
+  multicore_launch_core1(core1Loop);
 }
 
+// ================= LOOP =================
 void loop() {
   if (Serial.available() > 0) {
     String comando = Serial.readStringUntil('\n');
@@ -61,20 +77,17 @@ void loop() {
     procesarComando(comando);
   }
 
-  float pesoTotal = leerPesoTotal();
+  // Leer celdas en este core
+  float peso = 0;
+  if (active1) peso += hx711_1.get_units(iterations);
+  if (active2) peso += hx711_2.get_units(iterations);
+  lecturaCore0 = peso / 1000.0;
+
+  float pesoTotal = lecturaCore0 + lecturaCore1;
   mostrarPeso(pesoTotal);
 }
 
-float leerPesoTotal() {
-  float peso = 0;
-
-  if (active1) peso += hx711_1.get_units(iterations);
-  if (active2) peso += hx711_2.get_units(iterations);
-  if (active3) peso += hx711_3.get_units(iterations);
-  if (active4) peso += hx711_4.get_units(iterations);
-
-  return peso / 1000.0;  // Kg
-}
+// ================= COMANDOS =================
 void procesarComando(String comando) {
   comando.trim();
   comando.toUpperCase();
@@ -88,7 +101,7 @@ void procesarComando(String comando) {
     return;
   }
 
-    if (comando == "1") {
+  if (comando == "1") {
     active1 = !active1;
     Serial.print("CELDA 1 ");
     Serial.println(active1 ? "ACTIVADA" : "DESACTIVADA");
@@ -142,38 +155,11 @@ void procesarComando(String comando) {
     }
     return;
   }
-
-  if (comando.startsWith("CALL ")) {
-    // CALL X Y
-    int indexEspacio1 = comando.indexOf(' ', 5);
-    int indexEspacio2 = comando.indexOf(' ', indexEspacio1 + 1);
-
-    if (indexEspacio1 > 0 && indexEspacio2 == -1) {
-      // Extraer celda y peso
-      int celda = comando.substring(5, indexEspacio1).toInt();
-      float peso = comando.substring(indexEspacio1 + 1).toFloat();
-
-      if (celda >= 1 && celda <= 4 && peso > 0) {
-        calibrarCelda(celda, peso);
-        Serial.print("OK CELDA ");
-        Serial.print(celda);
-        Serial.print(" = ");
-        Serial.print(peso);
-        Serial.println(" KG");
-      } else {
-        Serial.println("ERROR PARAMETROS CALL");
-      }
-    } else {
-      Serial.println("ERROR FORMATO CALL. USA: CALL X Y");
-    }
-    return;
-  }
-
-  // Comando no reconocido
   Serial.println("ERROR COMANDO DESCONOCIDO");
 }
 
 
+// ================= DISPLAY PESO =================
 bool verificarEstabilidad(float peso) {
   static float pesoAnterior = 0;
   float diferencia = abs(peso - pesoAnterior);
@@ -191,10 +177,10 @@ void mostrarPeso(float peso) {
     return;
   }
 
-  // Aplicar zona muerta de ±2.5g
-  if (fabs(peso) < 0.0025) {
-    peso = 0;
-  }
+  // Zona muerta de ±2.5g
+  if (fabs(peso) < 0.0025) peso = 0;
+
+  pesoEstable = verificarEstabilidad(peso);
 
   String estado = pesoEstable ? "ST NW " : "UT NW ";
   String signo = (peso >= 0) ? "+" : "-";
@@ -202,55 +188,4 @@ void mostrarPeso(float peso) {
   String tiempoMs = String(tiempoTranscurrido) + "ms";
 
   Serial.println(estado + signo + value + unidad + " " + tiempoMs);
-}
-void calibrarCelda(int celda, float pesoConocido) {
-  if (pesoConocido <= 0) return;
-
-  long lectura = 0;
-  float nuevoFactor = 0;
-
-  switch (celda) {
-    case 1:
-      hx711_1.tare();
-      Serial.println("Tare Realizado, colocar peso");
-      delay(5000);
-      lectura = hx711_1.get_value(50);
-      nuevoFactor = lectura / pesoConocido;
-      hx711_1.set_scale(nuevoFactor);
-      factorCalibracion1 = nuevoFactor;
-      break;
-
-    case 2:
-      hx711_2.tare();
-      Serial.println("Tare Realizado, colocar peso");
-      delay(5000);
-      lectura = hx711_2.get_value(50);
-      nuevoFactor = lectura / pesoConocido;
-      hx711_2.set_scale(nuevoFactor);
-      factorCalibracion2 = nuevoFactor;
-      break;
-
-    case 3:
-      hx711_3.tare();
-      Serial.println("Tare Realizado, colocar peso");
-      delay(5000);
-      lectura = hx711_3.get_value(50);
-      nuevoFactor = lectura / pesoConocido;
-      hx711_3.set_scale(nuevoFactor);
-      factorCalibracion3 = nuevoFactor;
-      break;
-
-    case 4:
-      hx711_4.tare();
-      Serial.println("Tare Realizado, colocar peso");
-      delay(5000);
-      lectura = hx711_4.get_value(50);
-      nuevoFactor = lectura / pesoConocido;
-      hx711_4.set_scale(nuevoFactor);
-      factorCalibracion4 = nuevoFactor;
-      break;
-  }
-
-  Serial.print("Nuevo factor celda "); Serial.print(celda);
-  Serial.print(": "); Serial.println(nuevoFactor);
 }
