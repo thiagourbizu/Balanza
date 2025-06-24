@@ -159,3 +159,19 @@ void loop() {
         }
     }
 }
+
+/*
+  // Determinar el signo
+  char signo = (peso < 0) ? '-' : '+';
+
+  // Obtener valor absoluto para el formateo
+  float valorAbsoluto = abs(peso);
+
+  // Formatear la cadena
+  // %06.3f: 6 dígitos enteros con ceros a la izquierda + . + 3 decimales
+  // snprintf asegura que la cadena quede siempre bien
+  snprintf(buffer, sizeof(buffer), "%c%09.3fkg", signo, valorAbsoluto);
+
+  // Mostrar resultado
+  Serial.println(buffer);
+ */
