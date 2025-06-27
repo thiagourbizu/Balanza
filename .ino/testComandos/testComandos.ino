@@ -1,8 +1,9 @@
 #include "HX711.h"
 
 // Pines del HX711
-#define DT 16
-#define SCK 10
+#define DT 22
+#define SCK 15
+
 
 HX711 balanza; 
 
@@ -14,7 +15,7 @@ bool pesoEstable = false;         // Indicador de estabilidad
 
 void setup() {
   Serial.begin(9600);
-  balanza.begin(DT, SCK);
+  balanza.begin(15, 22);
 
   // Configuración inicial de la balanza
   balanza.set_scale(factorCalibracion);
@@ -30,7 +31,7 @@ void loop() {
   }
 
   // Leer peso y determinar su estado
-  float peso = balanza.get_units(80)/1000;  // Kg
+  float peso = balanza.get_units(10)/1000;  // Kg
   pesoEstable = verificarEstabilidad(peso); 
 
   // Mostrar peso en el formato especificado
@@ -102,7 +103,7 @@ void mostrarPeso(float peso) {
 void calibrarConPeso(float pesoConocido) {
   if (pesoConocido > 0) {
     balanza.tare();
-    float lectura = balanza.get_units(80)/1000;
+    float lectura = balanza.get_units(10)/1000;
     Serial.println(lectura);
     factorCalibracion = lectura / pesoConocido;
     balanza.set_scale(factorCalibracion);

@@ -19,13 +19,17 @@ HX711 hx4;
 #define SCK3 18
 
 #define DT4 22
-#define SCK4 26
+#define SCK4 15
 
 // Calibración por celda
-float factor[4] = {126.658, 124.173, 125.083, 124}; // A - B - C - D
+//float factor[4] = {126.658, 124.173, 125.083, 124}; // A - B - C - D
+
+
+//Chango mas (1-4, 2-3, 3-2, 4-1), 
+float factor[4] = {125.179, 124.918, 125.956, 125.950}; // A - B - C - D
 
 // Estado de CELDAS
-bool activeCells[4] = {true, true, true, false};
+bool activeCells[4] = {true , true, true, true};
 
 float offset = 0;
 #define THRESHOLD_GRAMS 3.5
@@ -34,8 +38,8 @@ float offset = 0;
 volatile bool startSampling = false;
 volatile bool core1_done = false;
 
-volatile float core1_sampled_weight = 0.0;
-volatile int core1_sampled_active_count = 0;
+volatile float core1_weight = 0.0;
+volatile int core1_active_count = 0;
 
 volatile int sample_count = 15;
 // =========================================
@@ -44,28 +48,27 @@ void core1_entry() {
     while (true) {
         if (startSampling) {
             float subtotal = 0.0;
-            int active1 = 0;
+            int activeCount = 0;
             for (int i = 0; i < sample_count; i++) {
                 if (activeCells[2]) {
                     subtotal += hx3.get_units(1);
-                    if (i == 0) active1++;
+                    if (i == 0) activeCount++;
                 }
-
                 if (activeCells[3]) {
                     subtotal += hx4.get_units(1);
-                    if (i == 0) active1++;
+                    if (i == 0) activeCount++;
                 }
                 //Serial.println(i);
                 delay(1); // Control de carga
+          
             }
             
-            core1_sampled_weight = subtotal;
-            core1_sampled_active_count = active1;
+            core1_weight = subtotal;
+            core1_active_count = activeCount;
             
             core1_done = true;
             startSampling = false;
         }
-
         delay(1); // Reduce CPU uso mientras espera
     }
 }
@@ -89,6 +92,7 @@ float getStableWeight(int samples = 15) {
             if (i == 0) activeCount++;
         }
         //Serial.println(i);
+        delay(1);
     }
    
     // Esperar a que core1 termine
@@ -97,8 +101,8 @@ float getStableWeight(int samples = 15) {
     }
 
     // Agregar resultados de core1
-    total += core1_sampled_weight;
-    activeCount += core1_sampled_active_count;
+    total += core1_weight;
+    activeCount += core1_active_count;
 
     if (activeCount == 0) return 0.0;
 
@@ -106,16 +110,16 @@ float getStableWeight(int samples = 15) {
     avg -= offset;
 
     if (avg < THRESHOLD_GRAMS && avg > -THRESHOLD_GRAMS) return 0.0;
-    return avg;
+    return avg; // Importante que entregue en .g
 }
 
 void doTare() {
     offset = 0;
     float val = getStableWeight(20);
     offset = val;
-    Serial.print("Tara realizada. Offset actual: ");
-    Serial.print(offset / 1000.0, 3);
-    Serial.println(" kg");
+    Serial.println("+00000.000kg");
+//    Serial.print(offset / 1000.0, 3);
+//    Serial.println(" kg");
 }
 
 void setup() {
@@ -126,7 +130,7 @@ void setup() {
     hx2.begin(DT2, SCK2);
     hx3.begin(DT3, SCK3);
     hx4.begin(DT4, SCK4);
-
+    
     hx1.set_scale(factor[0]);
     hx2.set_scale(factor[1]);
     hx3.set_scale(factor[2]);
@@ -137,41 +141,29 @@ void setup() {
     hx3.tare();
     hx4.tare();
 
+    
     // Lanzamos core 1
     multicore_launch_core1(core1_entry);
 }
 
 void loop() {
-    float peso;
-    peso = getStableWeight(15);
-    Serial.print("Peso total: ");
-    Serial.print(peso / 1000.0, 3);
-    Serial.println(" kg"); 
     if (Serial.available()) {
-        char cmd = Serial.read();
-        if (cmd == 'W' || cmd == 'w') {
-//            peso = getStableWeight(15);
-//            Serial.print("Peso total: ");
-//            Serial.print(peso / 1000.0, 3);
-//            Serial.println(" kg");
-        } else if (cmd == 'Z' || cmd == 'z') {
+        char serial = toupper(Serial.read());
+        if (serial == 'W') {
+            float peso = getStableWeight(20)/1000;
+
+            // Determinar el signo
+            char signo = (peso < 0) ? '-' : '+';
+            
+            // Obtener valor absoluto para el formateo
+            float valorAbsoluto = abs(peso);
+            char buffer[13];
+      
+            // Formatear la cadena: +000012.345kg
+            snprintf(buffer, sizeof(buffer), "%c%09.3fkg", signo, valorAbsoluto);
+            Serial.println(buffer);
+        } else if (serial == 'Z') {
             doTare();
         }
     }
 }
-
-/*
-  // Determinar el signo
-  char signo = (peso < 0) ? '-' : '+';
-
-  // Obtener valor absoluto para el formateo
-  float valorAbsoluto = abs(peso);
-
-  // Formatear la cadena
-  // %06.3f: 6 dígitos enteros con ceros a la izquierda + . + 3 decimales
-  // snprintf asegura que la cadena quede siempre bien
-  snprintf(buffer, sizeof(buffer), "%c%09.3fkg", signo, valorAbsoluto);
-
-  // Mostrar resultado
-  Serial.println(buffer);
- */
