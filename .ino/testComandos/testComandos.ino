@@ -1,8 +1,8 @@
 #include "HX711.h"
 
 // Pines del HX711
-#define DT 22
-#define SCK 15
+#define DT1 29
+#define SCK1 18
 
 
 HX711 balanza; 
@@ -15,7 +15,7 @@ bool pesoEstable = false;         // Indicador de estabilidad
 
 void setup() {
   Serial.begin(9600);
-  balanza.begin(15, 22);
+  balanza.begin(DT1, SCK1);
 
   // Configuración inicial de la balanza
   balanza.set_scale(factorCalibracion);
