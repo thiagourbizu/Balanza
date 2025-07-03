@@ -15,18 +15,20 @@ HX711 hx4;
 #define DT2 19
 #define SCK2 18
 
-#define DT3 22
-#define SCK3 26
+#define DT3 14
+#define SCK3 15
 
-#define DT4 20
-#define SCK4 21
+#define DT4 13
+#define SCK4 12
 
-// Calibración por celda
-float factor[4] = {126.658, 125.083, 124.918, 125.950}; // A - B - D - E
+// Calibración por celda float factor[4] = {126.658, 125.083, 124.918, 125.950}; // A - B - D - E
 
 //Chango mas (1-4, 2-3, 3-2, 4-1),
 //float factor[4] = {125.179, 124.918, 125.956, 125.950}; // A - B - C - D
+float factor[4] = {125.956*0.25148514851485, 125.950*0.25148514851485, 124.918*0.25148514851485,125.179*0.25148514851485};
+//float factor[4] = {31.489, 31.4875, 32.2295,31.29475};
 
+//float factor[4] = {382.340, 382.320, 379.190,379.980};
 // Estado de CELDAS
 bool activeCells[4] = {true, true, true, true};
 
@@ -131,7 +133,7 @@ void setup() {
   // Lanzamos core 1
   multicore_launch_core1(core1_entry);
   // Tare Inicial
-  doTare();
+  //doTare();
 }
 
 void loop() {
@@ -168,5 +170,37 @@ void loop() {
       Serial.println(activeCells[3]);}
       
     if (serial == 'Z') doTare();
+
+    //if (serial == 'H') calibrar(1000.0);
   }
+}
+void calibrar(float peso_individual) {
+  float total=0;
+
+  for (int i = 0; i < 40; i++) {
+    total += hx1.get_units(1);
+    total += hx2.get_units(1);
+    total += hx3.get_units(1);
+    total += hx4.get_units(1);
+    //delay(200); // pequeño retardo entre lecturas
+  }
+
+  // Promedios
+  total/= 10.0;
+
+  factor[0] = total != 0 ? total / peso_individual : 1;
+  factor[1] = total != 0 ? total / peso_individual : 1;
+  factor[2] = total != 0 ? total / peso_individual : 1;
+  factor[3] = total != 0 ? total / peso_individual : 1;
+
+  Serial.println("== Factores de calibración individuales ==");
+  Serial.print("Factor 1: "); Serial.println(factor[0], 6);
+  Serial.print("Factor 2: "); Serial.println(factor[1], 6);
+  Serial.print("Factor 3: "); Serial.println(factor[2], 6);
+  Serial.print("Factor 4: "); Serial.println(factor[3], 6);
+
+  hx1.set_scale(factor[0]);
+  hx2.set_scale(factor[1]);
+  hx3.set_scale(factor[2]);
+  hx4.set_scale(factor[3]);
 }
