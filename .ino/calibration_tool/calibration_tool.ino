@@ -23,8 +23,7 @@ void setup() {
   Serial.println("Coloca el peso de referencia y presiona ENTER en el monitor serial");
 }
 
-void loop() {
-  if (Serial.available()) {
+void loop() {  if (Serial.available()) {
     Serial.println("Lest's Go.");
     Serial.read();  // Limpia el buffer
     // Promediar múltiples lecturas

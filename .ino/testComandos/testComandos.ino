@@ -1,9 +1,17 @@
 #include "HX711.h"
 
 // Pines del HX711
-#define DT1 29
-#define SCK1 18
+#define DT1 16
+#define SCK1 15
 
+#define DT2 18
+#define SCK2 17
+
+#define DT3 20
+#define SCK3 19
+
+#define DT4 22
+#define SCK4 21
 
 HX711 balanza; 
 
@@ -14,7 +22,7 @@ int decimales = 3;                // Decimales
 bool pesoEstable = false;         // Indicador de estabilidad
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   balanza.begin(DT1, SCK1);
 
   // Configuración inicial de la balanza

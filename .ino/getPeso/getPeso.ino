@@ -8,27 +8,38 @@ HX711 hx2;
 HX711 hx3;
 HX711 hx4;
 
-// Pines
-#define DT1 17
-#define SCK1 16
+// Pines Placa Changomas
+//#define DT1 17
+//#define SCK1 16
+//
+//#define DT2 19
+//#define SCK2 18
+//
+//#define DT3 14
+//#define SCK3 15
+//
+//#define DT4 13
+//#define SCK4 12
 
-#define DT2 19
-#define SCK2 18
+// Pines placa actual 11-07
+#define DT1 16
+#define SCK1 15
 
-#define DT3 14
-#define SCK3 15
+#define DT2 18
+#define SCK2 17
 
-#define DT4 13
-#define SCK4 12
+#define DT3 20
+#define SCK3 19
 
-// Calibración por celda float factor[4] = {126.658, 125.083, 124.918, 125.950}; // A - B - D - E
+#define DT4 22
+#define SCK4 21
 
-//Chango mas (1-4, 2-3, 3-2, 4-1),
-//float factor[4] = {125.179, 124.918, 125.956, 125.950}; // A - B - C - D
-float factor[4] = {125.956*0.25148514851485, 125.950*0.25148514851485, 124.918*0.25148514851485,125.179*0.25148514851485};
-//float factor[4] = {31.489, 31.4875, 32.2295,31.29475};
+// Calibración celdas ABC
+float factor[4] = {126.658, 125.083, 124.173, 126.658}; // A - B - C - D
 
-//float factor[4] = {382.340, 382.320, 379.190,379.980};
+//Chango mas (1-4, 2-3, 3-2, 4-1) 382.340 - 382.320 - 379.190 - 379.980
+//float factor[4] = {125.956*0.25148514851485, 125.950*0.25148514851485, 124.918*0.25148514851485,125.179*0.25148514851485}; 
+
 // Estado de CELDAS
 bool activeCells[4] = {true, true, true, true};
 
@@ -40,7 +51,6 @@ volatile bool startSampling = false;
 volatile bool core1_done = false;
 
 volatile float core1_weight = 0.0;
-volatile int core1_active_count = 0;
 
 volatile int sample_count = 15;
 // =========================================
@@ -49,23 +59,14 @@ void core1_entry() {
   while (true) {
     if (startSampling) {
       float subtotal = 0.0;
-      int activeCount = 0;
       for (int i = 0; i < sample_count; i++) {
-        if (activeCells[2]) {
-          subtotal += hx3.get_units(1);
-          if (i == 0) activeCount++;
-        }
-        if (activeCells[3]) {
-          subtotal += hx4.get_units(1);
-          if (i == 0) activeCount++;
-        }
+        if (activeCells[2]) subtotal += hx3.get_units(1);
+        if (activeCells[3]) subtotal += hx4.get_units(1);
         //Serial.println(i);
         delay(1); // Control de carga
-
       }
 
       core1_weight = subtotal;
-      core1_active_count = activeCount;
 
       core1_done = true;
       startSampling = false;
@@ -76,7 +77,6 @@ void core1_entry() {
 
 float getStableWeight(int samples = 15) {
   float total = 0;
-  int activeCount = 0;
 
   // Iniciar proceso en core1
   sample_count = samples;
@@ -84,14 +84,8 @@ float getStableWeight(int samples = 15) {
   startSampling = true;
   // Realiza lecturas en core0
   for (int i = 0; i < samples; i++) {
-    if (activeCells[0]) {
-      total += hx1.get_units(1);
-      if (i == 0) activeCount++;
-    }
-    if (activeCells[1]) {
-      total += hx2.get_units(1);
-      if (i == 0) activeCount++;
-    }
+    if (activeCells[0]) total += hx1.get_units(1);
+    if (activeCells[1]) total += hx2.get_units(1);
     //Serial.println(i);
     delay(1);
   }
@@ -103,11 +97,10 @@ float getStableWeight(int samples = 15) {
 
   // Agregar resultados de core1
   total += core1_weight;
-  activeCount += core1_active_count;
 
-  if (activeCount == 0) return 0.0;
+  if (activeCells[0] == 0 && activeCells[1] == 0 && activeCells[2] == 0 && activeCells[3] == 0) return 0.0;
 
-  float avg = total / (samples * activeCount);
+  float avg = total / samples;
   avg -= offset;
 
   if (avg < THRESHOLD_GRAMS && avg > -THRESHOLD_GRAMS) return 0.0;
@@ -133,7 +126,7 @@ void setup() {
   // Lanzamos core 1
   multicore_launch_core1(core1_entry);
   // Tare Inicial
-  //doTare();
+  doTare();
 }
 
 void loop() {
@@ -171,36 +164,5 @@ void loop() {
       
     if (serial == 'Z') doTare();
 
-    //if (serial == 'H') calibrar(1000.0);
   }
-}
-void calibrar(float peso_individual) {
-  float total=0;
-
-  for (int i = 0; i < 40; i++) {
-    total += hx1.get_units(1);
-    total += hx2.get_units(1);
-    total += hx3.get_units(1);
-    total += hx4.get_units(1);
-    //delay(200); // pequeño retardo entre lecturas
-  }
-
-  // Promedios
-  total/= 10.0;
-
-  factor[0] = total != 0 ? total / peso_individual : 1;
-  factor[1] = total != 0 ? total / peso_individual : 1;
-  factor[2] = total != 0 ? total / peso_individual : 1;
-  factor[3] = total != 0 ? total / peso_individual : 1;
-
-  Serial.println("== Factores de calibración individuales ==");
-  Serial.print("Factor 1: "); Serial.println(factor[0], 6);
-  Serial.print("Factor 2: "); Serial.println(factor[1], 6);
-  Serial.print("Factor 3: "); Serial.println(factor[2], 6);
-  Serial.print("Factor 4: "); Serial.println(factor[3], 6);
-
-  hx1.set_scale(factor[0]);
-  hx2.set_scale(factor[1]);
-  hx3.set_scale(factor[2]);
-  hx4.set_scale(factor[3]);
 }
